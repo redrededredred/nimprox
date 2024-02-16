@@ -15,6 +15,7 @@ const
     netzweltUrl: string = "https://www.netzwelt.de/proxy/index.html"
     badNetzweltData: array[3, string] = ["FoxyProxy", "IP", "Port"]
     maxTimeoutNetzwelt: int = 2000
+    tempFileName: string = "scrape.html"
 let client: HttpClient = newHttpClient(userAgent = "nim")
 
 type
@@ -36,16 +37,22 @@ proc getFreeProxiesCz(client: HttpClient): seq[CzProxy] =
     let response: Response = client.get(freeProxyCzUrl)
     if response.code != Http200:
         return # Returning an empty seq@[] indecates failure
-    echo response.body
+    let tempFile = open(tempFileName, fmWrite)
+    defer: tempFile.close()
+    tempFile.write(response.body)
+    var html = loadHtml(tempFileName)
+    var rawData: seq[string] = @[]
+    for tr in findAll(html, "tr"):
+        echo tr
 
 proc getNetzweltProxies(client: HttpClient): seq[NetzweltProxy] =
     let response: Response = client.get(netzweltUrl)
     if response.code != Http200:
         return
-    let tempFile = open("scrape.html", fmWrite)
+    let tempFile = open(tempFileName, fmWrite)
     defer: tempFile.close()
     tempFile.write(response.body)
-    var html = loadHtml("scrape.html")
+    var html = loadHtml(tempFileName)
     var rawData: seq[string] = @[]
     for tr in findAll(html, "tr"):
         for td in tr.items:
@@ -69,5 +76,5 @@ proc testProxySpeed(proxies: seq[NetzweltProxy]) =
 
 when tests:
     echo "Testing!"
-    testProxySpeed(client.getNetzweltProxies()) 
+    echo client.getFreeProxiesCz()
 
