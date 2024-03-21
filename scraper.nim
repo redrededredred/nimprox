@@ -42,8 +42,8 @@ proc getFreeProxiesCz(client: HttpClient): seq[CzProxy] =
     tempFile.write(response.body)
     var html = loadHtml(tempFileName)
     var rawData: seq[string] = @[]
-    for tr in findAll(html, "tr"):
-        echo tr
+    for span in findAll(html, "span"):
+        echo span
 
 proc getNetzweltProxies(client: HttpClient): seq[NetzweltProxy] =
     let response: Response = client.get(netzweltUrl)
